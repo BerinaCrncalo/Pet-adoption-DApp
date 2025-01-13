@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <title>Pet Adoption DApp</title>
+</head>
+
+<body>
+    <div id="login-container">
+        <img src="../frontend/assets/images/metamask-logo.svg" alt="Logo" id="logo">
+        <p>Please log in using your MetaMask wallet.</p>
+        <button id="connect">Connect to MetaMask</button>
+        <p id="connectedAddress">Connected address: <span></span></p>
+    </div>
+
+    <div id="adminContent" style="display: none;">
+        <div id="AdminContainer">
+            <p>Welcome, Admin!</p>
+            <label for="newAdoptionFee">New Adoption Fee:</label>
+            <input type="number" id="newAdoptionFee" placeholder="Enter new adoption fee" />
+            <button id="setAdoptionFee">Set Adoption Fee</button>
+
+            <div id="addPetContainer">
+                <label for="petBreed">Pet Breed:</label>
+                <input type="text" id="petBreed" placeholder="Enter pet breed" />
+                <button id="addPet">Add Pet</button>
+            </div>
+
+            <div id="deletePetContainer">
+                <label for="deletePetId">Pet ID to Delete:</label>
+                <input type="number" id="deletePetId" placeholder="Enter pet ID" />
+                <button id="deletePet">Delete Pet</button>
+            </div>
+
+            <div id="getAvailablePetsContainer">
+                <button id="getAvailablePets">Get Available Pets</button>
+                <div id="availablePetsList"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="userContent" style="display: none;">
+        <div id="UserContainer">                
+            <p>Welcome, User!</p>
+
+            <label for="adoptPetId">Pet ID to Adopt:</label>
+            <input type="number" id="adoptPetId" placeholder="Enter pet ID" />
+            <button id="adoptPetButton">Adopt Pet</button>
+
+            <label for="returnPetId">Pet ID to Return:</label>
+            <input type="number" id="returnPetId" placeholder="Enter pet ID" />
+            <button id="returnPetButton">Return Pet</button>
+
+            <label for="adoptDetailsPetId">Pet ID for Details:</label>
+            <input type="number" id="adoptDetailsPetId" placeholder="Enter pet ID" />
+            <button id="getAdoptDetailsButton">Get Adoption Details</button>
+
+            <div id="adoptDetailsContainer" style="display: none;">
+                <p id="adoptDetailsBreed">Pet Breed: </p>
+                <p id="adoptDetailsAdopter">Adopter: </p>
+                <p id="adoptDetailsAdoptStartTime">Adopt Start Time: </p>
+            </div>
+
+            <div id="adoptionHistoryContainer">
+                <button id="getAdoptionHistoryButton">Get Adoption History</button>
+                <div id="adoptionHistoryList"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="messageContainerUser"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
+    <link rel="stylesheet" href="../frontend/assets/css/login.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <script>
+        // Define your contract ABI and address
+        const abi = [
+	{
+		"inputs": [],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "newRate",
+				"type": "uint256"
+			}
+		],
+		"name": "AdoptionFeeRateSet",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "petId",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "address",
+				"name": "adopter",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "adoptionStartTime",
+				"type": "uint256"
+			}
+		],
+		"name": "PetAdopted",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "petId",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "address",
+				"name": "adopter",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "adoptionEndTime",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "adoptionDuration",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "adoptionFee",
+				"type": "uint256"
+			}
+		],
+		"name": "PetReturned",
+		"type": "event"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "_petName",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_breed",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_age",
+				"type": "uint256"
+			}
+		],
+		"name": "addPet",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "petId",
+				"type": "uint256"
+			}
+		],
+		"name": "adoptPet",
+		"outputs": [],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "adoptionFeeRate",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "adoptionHistory",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "petId",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "adoptionStartTime",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "adoptionEndTime",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "adoptionFee",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "petId",
+				"type": "uint256"
+			}
+		],
+		"name": "deletePet",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getAdoptionHistory",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "uint256",
+						"name": "petId",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "adoptionStartTime",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "adoptionEndTime",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "adoptionFee",
+						"type": "uint256"
+					}
+				],
+				"internalType": "struct PetAdoption.AdoptionHistory[]",
+				"name": "",
+				"type": "tuple[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getAvailablePets",
+		"outputs": [
+			{
+				"internalType": "uint256[]",
+				"name": "availablePetIds",
+				"type": "uint256[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "petId",
+				"type": "uint256"
+			}
+		],
+		"name": "getPetDetails",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "petName",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "breed",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "age",
+				"type": "uint256"
+			},
+			{
+				"internalType": "address",
+				"name": "adopter",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "adoptionStartTime",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "owner",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "pets",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "petName",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "breed",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "age",
+				"type": "uint256"
+			},
+			{
+				"internalType": "address",
+				"name": "adopter",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "adoptionStartTime",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "petId",
+				"type": "uint256"
+			}
+		],
+		"name": "returnPet",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "newRate",
+				"type": "uint256"
+			}
+		],
+		"name": "setAdoptionFeeRate",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "totalPets",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	}
+]
+        const contract = '0xF311af909F66a37A18B57ae91cecfa0cc3b01E72'; 
+
+        // Your MetaMask address
+        const myMetaMaskAddress = '0x077cc97dA645fd87710E9c692119524A810EA2Ea';
+
+        function isAdmin(contract) {
+            return contract.toLowerCase() === myMetaMaskAddress.toLowerCase();
+        }
+
+        $('#connect').click(async function () {
+            try {
+                // Check if window.ethereum is available
+                if (typeof window.ethereum !== 'undefined') {
+                    // Request MetaMask connection
+                    await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    window.web3 = new Web3(window.ethereum);
+
+                    const connectedAddress = window.ethereum.selectedAddress;
+                    console.log('Connected to MetaMask');
+                    $('#connect').hide();
+                    $('#login-container').hide();
+                    $('#connectedAddress').css('display', 'block');
+                    $('#connectedAddress > span').html(connectedAddress);
+
+                    // Check if the connected address is admin
+                    if (isAdmin(connectedAddress)) {
+                        console.log('Admin logged in');
+                        $('#adminContent').show();
+                    } else {
+                        console.log('User logged in');
+                        $('#userContent').show();
+                    }
+                } else {
+                    console.error('MetaMask is not installed or is not detected.');
+                    alert('Please install MetaMask to proceed.');
+                }
+            } catch (error) {
+                console.error('Error during connection:', error.message);
+                alert('An error occurred while trying to connect to MetaMask.');
+            }
+        });
+
+        // Set Adoption Fee
+        $('#setAdoptionFee').click(async function () {
+            try {
+                const newFee = $('#newAdoptionFee').val();
+
+                if (!newFee || isNaN(newFee)) {
+                    showAlert('Please enter a valid numeric fee.');
+                    return;
+                }
+
+                const contractInstance = new window.web3.eth.Contract(abi, contract);
+                const connectedAddress = window.ethereum.selectedAddress;
+
+                if (isAdmin(connectedAddress)) {
+                    await contractInstance.methods.setAdoptionFee(newFee).send({ from: connectedAddress });
+                    showMessage('Adoption fee set successfully: ' + newFee);
+                } else {
+                    showAlert('You are not authorized to set the adoption fee.');
+                }
+            } catch (error) {
+                showError('Error setting adoption fee: ' + error.message);
+            }
+        });
+
+        // Add Pet
+        $('#addPet').click(async function () {
+            try {
+                const petBreed = $('#petBreed').val();
+
+                if (!petBreed) {
+                    showAlert('Please enter a valid pet breed.');
+                    return;
+                }
+
+                const contractInstance = new window.web3.eth.Contract(abi, contract);
+                const connectedAddress = window.ethereum.selectedAddress;
+
+                if (isAdmin(connectedAddress)) {
+                    await contractInstance.methods.addPet(petBreed).send({ from: connectedAddress });
+                    showMessage('Pet added successfully: ' + petBreed);
+                } else {
+                    showAlert('You are not authorized to add a pet.');
+                }
+            } catch (error) {
+                showError('Error adding pet: ' + error.message);
+            }
+        });
+
+        // Delete Pet
+        $('#deletePet').click(async function () {
+            try {
+                const petIdToDelete = $('#deletePetId').val();
+
+                if (!petIdToDelete || isNaN(petIdToDelete)) {
+                    showAlert('Please enter a valid pet ID.');
+                    return;
+                }
+
+                const contractInstance = new window.web3.eth.Contract(abi, contract);
+                const connectedAddress = window.ethereum.selectedAddress;
+
+                if (isAdmin(connectedAddress)) {
+                    await contractInstance.methods.deletePet(petIdToDelete).send({ from: connectedAddress });
+                    showMessage('Pet deleted successfully: ' + petIdToDelete);
+                } else {
+                    showAlert('You are not authorized to delete a pet.');
+                }
+            } catch (error) {
+                showError('Error deleting pet: ' + error.message);
+            }
+        });
+
+        // Get Available Pets
+        $('#getAvailablePets').click(async function () {
+            try {
+                const contractInstance = new window.web3.eth.Contract(abi, contract);
+                const availablePets = await contractInstance.methods.getAvailablePets().call();
+                displayAvailablePets(availablePets);
+            } catch (error) {
+                console.error('Error fetching available pets:', error.message);
+            }
+        });
+
+        function displayAvailablePets(pets) {
+            $('#availablePetsList').empty();
+            pets.forEach(pet => {
+                $('#availablePetsList').append(`<div>Pet ID: ${pet.id}, Breed: ${pet.breed}</div>`);
+            });
+        }
+
+        // Utility functions for alerts
+        function showMessage(message) {
+            $('#messageContainerUser').text(message);
+        }
+
+        function showAlert(message) {
+            alert(message);
+        }
+
+        function showError(message) {
+            console.error(message);
+        }
+    </script>
+</body>
+</html>

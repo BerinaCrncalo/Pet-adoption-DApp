@@ -1,0 +1,405 @@
+{
+	"compiler": {
+		"version": "0.8.26+commit.8a97fa7a"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [],
+				"stateMutability": "nonpayable",
+				"type": "constructor"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "newRate",
+						"type": "uint256"
+					}
+				],
+				"name": "AdoptionFeeRateSet",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "petId",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "address",
+						"name": "adopter",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "adoptionStartTime",
+						"type": "uint256"
+					}
+				],
+				"name": "PetAdopted",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "petId",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "address",
+						"name": "adopter",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "adoptionEndTime",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "adoptionDuration",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "adoptionFee",
+						"type": "uint256"
+					}
+				],
+				"name": "PetReturned",
+				"type": "event"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "string",
+						"name": "_petName",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "_breed",
+						"type": "string"
+					},
+					{
+						"internalType": "uint256",
+						"name": "_age",
+						"type": "uint256"
+					}
+				],
+				"name": "addPet",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "petId",
+						"type": "uint256"
+					}
+				],
+				"name": "adoptPet",
+				"outputs": [],
+				"stateMutability": "payable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "adoptionFeeRate",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"name": "adoptionHistory",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "petId",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "adoptionStartTime",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "adoptionEndTime",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "adoptionFee",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "petId",
+						"type": "uint256"
+					}
+				],
+				"name": "deletePet",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "getAdoptionHistory",
+				"outputs": [
+					{
+						"components": [
+							{
+								"internalType": "uint256",
+								"name": "petId",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "adoptionStartTime",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "adoptionEndTime",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "adoptionFee",
+								"type": "uint256"
+							}
+						],
+						"internalType": "struct PetAdoption.AdoptionHistory[]",
+						"name": "",
+						"type": "tuple[]"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "getAvailablePets",
+				"outputs": [
+					{
+						"internalType": "uint256[]",
+						"name": "availablePetIds",
+						"type": "uint256[]"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "petId",
+						"type": "uint256"
+					}
+				],
+				"name": "getPetDetails",
+				"outputs": [
+					{
+						"internalType": "string",
+						"name": "petName",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "breed",
+						"type": "string"
+					},
+					{
+						"internalType": "uint256",
+						"name": "age",
+						"type": "uint256"
+					},
+					{
+						"internalType": "address",
+						"name": "adopter",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "adoptionStartTime",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "owner",
+				"outputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"name": "pets",
+				"outputs": [
+					{
+						"internalType": "string",
+						"name": "petName",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "breed",
+						"type": "string"
+					},
+					{
+						"internalType": "uint256",
+						"name": "age",
+						"type": "uint256"
+					},
+					{
+						"internalType": "address",
+						"name": "adopter",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "adoptionStartTime",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "petId",
+						"type": "uint256"
+					}
+				],
+				"name": "returnPet",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "newRate",
+						"type": "uint256"
+					}
+				],
+				"name": "setAdoptionFeeRate",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "totalPets",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			}
+		],
+		"devdoc": {
+			"kind": "dev",
+			"methods": {},
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {},
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"contracts/project.sol": "PetAdoption"
+		},
+		"evmVersion": "cancun",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": false,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"contracts/project.sol": {
+			"keccak256": "0xe9ee919ff42126c7cf9c311ed0b93382382781164b4ea157d4315e36de767169",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://aa8e8aa9f0ad67183b7361a246eeb90f75d4536bf54c89deeb336090319454b5",
+				"dweb:/ipfs/QmZyMUazPBZAUKYRDLqFHyhyZjJH3SeTohB8Ue3Zft1KoY"
+			]
+		}
+	},
+	"version": 1
+}
