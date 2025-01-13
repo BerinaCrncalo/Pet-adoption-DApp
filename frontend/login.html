@@ -19,9 +19,15 @@
         <div id="AdminContainer">
             <p>Welcome, Admin!</p>
             <label for="newAdoptionFee">New Adoption Fee:</label>
-            <input type="number" id="newAdoptionFee" placeholder="Enter new adoption fee" />
+            <input type="number" id="newAdoptionFee" placeholder="Enter new adoption fee" required/>
             <button id="setAdoptionFee">Set Adoption Fee</button>
 
+            <!-- Input for Pet ID -->
+            <div id="PetIDContainer">
+                <label for="petId">Pet ID:</label>
+                <input type="number" id="petId" placeholder="Enter Pet ID" required>
+                <button id="PetID">Add Pet ID</button>
+            </div>
             <div id="addPetContainer">
                 <label for="petBreed">Pet Breed:</label>
                 <input type="text" id="petBreed" placeholder="Enter pet breed" />
@@ -484,27 +490,30 @@
 
         // Set Adoption Fee
         $('#setAdoptionFee').click(async function () {
-            try {
-                const newFee = $('#newAdoptionFee').val();
+    try {
+        const newFee = $('#newAdoptionFee').val();
+        const petId = $('#petId').val();  // Get the pet ID from the input field
 
-                if (!newFee || isNaN(newFee)) {
-                    showAlert('Please enter a valid numeric fee.');
-                    return;
-                }
+        if (!newFee || isNaN(newFee) || !petId) {
+            showAlert('Please enter a valid pet ID and adoption fee.');
+            return;
+        }
 
-                const contractInstance = new window.web3.eth.Contract(abi, contract);
-                const connectedAddress = window.ethereum.selectedAddress;
+        const contractAddress = '0xF311af909F66a37A18B57ae91cecfa0cc3b01E72'; // Replace with the correct contract address
+        const contractInstance = new window.web3.eth.Contract(abi, contractAddress);
+        const connectedAddress = window.ethereum.selectedAddress;
 
-                if (isAdmin(connectedAddress)) {
-                    await contractInstance.methods.setAdoptionFee(newFee).send({ from: connectedAddress });
-                    showMessage('Adoption fee set successfully: ' + newFee);
-                } else {
-                    showAlert('You are not authorized to set the adoption fee.');
-                }
-            } catch (error) {
-                showError('Error setting adoption fee: ' + error.message);
-            }
-        });
+        if (isAdmin(connectedAddress)) {
+            await contractInstance.methods.setAdoptionFee(petId, newFee).send({ from: connectedAddress });
+            showMessage('Adoption fee set successfully for pet ID ' + petId + ': ' + newFee);
+        } else {
+            showAlert('You are not authorized to set the adoption fee.');
+        }
+    } catch (error) {
+        showError('Error setting adoption fee: ' + error.message);
+    }
+});
+
 
         // Add Pet
         $('#addPet').click(async function () {
@@ -553,6 +562,71 @@
                 showError('Error deleting pet: ' + error.message);
             }
         });
+
+        //Adopt pet
+
+        $('#adoptPetButton').click(async function () {
+    try {
+        const petId = $('#adoptPetId').val(); // Get the pet ID from the input
+
+        if (!petId || isNaN(petId)) {
+            showAlert('Please enter a valid pet ID.');
+            return;
+        }
+
+        // Ensure MetaMask is connected
+        if (typeof window.ethereum === 'undefined') {
+            showAlert('MetaMask is not installed. Please install MetaMask and try again.');
+            return;
+        }
+
+        // Request account connection from MetaMask
+        await window.ethereum.request({ method: 'eth_requestAccounts' });
+
+        // Get connected address from MetaMask
+        const connectedAddress = window.ethereum.selectedAddress;
+
+        if (!connectedAddress) {
+            showAlert('Please connect your MetaMask wallet to proceed.');
+            return;
+        }
+
+        const contractAddress = '0xF311af909F66a37A18B57ae91cecfa0cc3b01E72'; // Replace with the correct contract address
+        const contractInstance = new window.web3.eth.Contract(abi, contractAddress);
+
+        const pet = await contractInstance.methods.pets(petId).call();
+
+        // Ensure pet is available for adoption (not already adopted)
+        if (pet.adopter !== '0x0000000000000000000000000000000000000000') {
+            showAlert('This pet has already been adopted.');
+            return;
+        }
+
+        // Ensure the user has enough funds to adopt the pet
+        const adoptionFee = await contractInstance.methods.adoptionFeeRate().call(); // Get adoption fee from the contract
+        const balance = await window.web3.eth.getBalance(connectedAddress);
+
+        if (parseInt(balance) < parseInt(adoptionFee)) {
+            showAlert('Insufficient funds for adoption. Please ensure you have enough ETH in your wallet.');
+            return;
+        }
+
+        // Confirm adoption and initiate transaction
+        const confirmation = confirm(`Are you sure you want to adopt this pet? Adoption fee is ${adoptionFee} ETH.`);
+
+        if (confirmation) {
+            await contractInstance.methods.adoptPet(petId).send({
+                from: connectedAddress,
+                value: adoptionFee
+            });
+
+            showMessage(`Pet with ID ${petId} has been successfully adopted!`);
+        }
+    } catch (error) {
+        showError('Error adopting pet: ' + error.message);
+    }
+});
+
 
         // Get Available Pets
         $('#getAvailablePets').click(async function () {

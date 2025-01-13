@@ -42,6 +42,7 @@ contract PetAdoption {
         owner = msg.sender;
     }
 
+    // Add a new pet
     function addPet(string memory _name, string memory _species, uint256 _adoptionFee) external onlyOwner {
         require(_adoptionFee > 0, "Adoption fee must be greater than zero");
 
@@ -57,14 +58,21 @@ contract PetAdoption {
         emit PetAdded(petId, _name, _adoptionFee, msg.sender);
     }
 
+    // Adopt a pet
     function adoptPet(uint256 petId) external payable validPetId(petId) {
         Pet storage pet = pets[petId];
+
+        // Ensure the pet is available for adoption
         require(!pet.isAdopted, "Pet is already adopted");
+
+        // Ensure the user has sent enough funds
         require(msg.value >= pet.adoptionFee, "Not enough funds for adoption");
 
+        // Mark the pet as adopted and update adopter
         pet.adopter = payable(msg.sender);
         pet.isAdopted = true;
 
+        // Record the adoption
         adoptions[petId].push(Adoption({
             petId: petId,
             adopter: msg.sender,
@@ -72,9 +80,11 @@ contract PetAdoption {
             timestamp: block.timestamp
         }));
 
+        // Emit event for the adoption
         emit PetAdopted(petId, msg.sender, msg.value, block.timestamp);
     }
 
+    // Get details of a pet by ID
     function getPetDetails(uint256 petId)
         external
         view
@@ -91,13 +101,16 @@ contract PetAdoption {
         return (pet.name, pet.species, pet.adopter, pet.adoptionFee, pet.isAdopted);
     }
 
+    // Get the adoption history of a pet by ID
     function getAdoptionHistory(uint256 petId) external view validPetId(petId) returns (Adoption[] memory) {
         return adoptions[petId];
     }
 
+    // Get available pets for adoption
     function getAvailablePets() external view returns (uint256[] memory availablePetIds) {
         uint256 count = 0;
 
+        // Count how many pets are available for adoption
         for (uint256 i = 0; i < totalPets; i++) {
             if (!pets[i].isAdopted) {
                 count++;
@@ -107,6 +120,7 @@ contract PetAdoption {
         availablePetIds = new uint256[](count);
         count = 0;
 
+        // List all available pets
         for (uint256 i = 0; i < totalPets; i++) {
             if (!pets[i].isAdopted) {
                 availablePetIds[count] = i;
@@ -117,6 +131,7 @@ contract PetAdoption {
         return availablePetIds;
     }
 
+    // Update details of an existing pet
     function updatePet(uint256 petId, string memory newName, string memory newSpecies, uint256 newAdoptionFee)
         external
         onlyOwner
@@ -132,6 +147,7 @@ contract PetAdoption {
         emit PetUpdated(petId, newName, newSpecies, newAdoptionFee);
     }
 
+    // Withdraw funds from the contract
     function withdrawFunds() external onlyOwner {
         uint256 balance = address(this).balance;
         require(balance > 0, "No funds to withdraw");
